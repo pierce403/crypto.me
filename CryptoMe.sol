@@ -8,23 +8,38 @@ contract CryptoMe {
     struct Identity {
         address addr;
         string name;
+        string email;
         string ipfs;
     }
 
     address admin;
     mapping(address => Identity) addrs;
     mapping(string => Identity) names;
+    mapping(string => Identity) emails;
     float basePrice=0.1;
 
-    /// Create a new ballot with $(_numProposals) different proposals.
-    function Register(string name) public {
+  function CryptoMe()
+  {
+    admin=msg.sender;
+  }
+
+  function register(string name, String email) public {
+    
+      // verify name is legit
+      // verify name is available
     
       // figure out how many registrations in the past week
+      //if msg.amount < (recentCount*basePrice)(bytes(name).length)
+      //  return "boo, lame, needs more money";
       
-      if msg.amount < (recentCount*basePrice)(bytes(name).length)
-        return "boo, lame, needs more money";
+      Identity newID=Identity(name:name,email:email);
       
-      addrs[msg.sender]=new Identity();
-      addrs[msg.sender].idName=name;
+      addrs[msg.sender]=newID;
+      names[name]=newID;
+      emails[email]=newID;
+    }
+    
+    function id(string name) public {
+      return names[name];
     }
 }
