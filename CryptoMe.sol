@@ -5,7 +5,7 @@ pragma solidity ^0.4.0;
 
 contract CryptoMe {
 
-    struct Identity {
+    struct identity {
         address addr;
         string name;
         string email;
@@ -13,17 +13,17 @@ contract CryptoMe {
     }
 
     address admin;
-    mapping(address => Identity) addrs;
-    mapping(string => Identity) names;
-    mapping(string => Identity) emails;
-    float basePrice=0.1;
+    mapping(address => identity) addrs;
+    mapping(string => identity) names;
+    mapping(string => identity) emails;
+ //   float basePrice=0.1;
 
-  function CryptoMe()
+  function CryptoMe() public
   {
     admin=msg.sender;
   }
 
-  function register(string name, String email) public {
+  function register(string name, string email) public {
     
       // verify name is legit
       // verify name is available
@@ -32,14 +32,14 @@ contract CryptoMe {
       //if msg.amount < (recentCount*basePrice)(bytes(name).length)
       //  return "boo, lame, needs more money";
       
-      Identity newID=Identity(name:name,email:email);
+      identity storage newID;// = identity(msg.sender,name,email,"potato");
       
       addrs[msg.sender]=newID;
       names[name]=newID;
       emails[email]=newID;
     }
     
-    function id(string name) public {
+    function id(string name) public returns (identity id){
       return names[name];
     }
 }
