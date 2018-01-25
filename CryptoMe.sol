@@ -33,6 +33,9 @@ contract CryptoMe {
       //  return "boo, lame, needs more money";
       
       identity storage newID;// = identity(msg.sender,name,email,"potato");
+      newID.addr=msg.sender;
+      newID.name=name;
+      newID.email=email;
       
       addrs[msg.sender]=newID;
       names[name]=newID;
