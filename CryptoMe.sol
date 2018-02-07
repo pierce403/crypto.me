@@ -1,5 +1,12 @@
 pragma solidity ^0.4.19;
 
+// TODO
+// setprimary()
+// check name legitness
+// add payable limiter
+//
+// auction??
+
 contract CryptoMe {
 
     struct identity {
@@ -52,6 +59,7 @@ contract CryptoMe {
       identity storage newid; //= identity(msg.sender,addr_s,name,"email","ipfs",aliases,connections);
       newid.addr = msg.sender;
       newid.addr_s = addr_s;
+      newid.name=name;
       newid.email="email";
       newid.ipfs="ipfs";
       newid.aliases.push(name);
