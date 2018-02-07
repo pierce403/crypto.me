@@ -1,8 +1,5 @@
 pragma solidity ^0.4.19;
 
-// don't try doing anything with this yet, it's still under construction!
-// https://ethereum.github.io/browser-solidity
-
 contract CryptoMe {
 
     struct identity {
@@ -11,59 +8,106 @@ contract CryptoMe {
         string name;
         string email;
         string ipfs;
+        
+        string[] aliases;
+        string[] connections;
     }
 
     address admin;
-    mapping(address => identity) addrs;
-    mapping(string => identity) names;
-    mapping(string => identity) emails;
+
+    mapping(string => string) addrs; // map names to addrs    
+    mapping(string => identity) ids; // map addrs to ids
  
   function CryptoMe() public
   {
     admin=msg.sender;
   }
 
-  function register(string name, string email) public returns(bool) {
+  function register(string name) public returns(bool) {
     
-      if(names[name].addr != address(0x0))
+      // TODO verify legit name here:
+    
+      // make sure we haven't seen this name before
+      if(bytes(addrs[name]).length!=0)
       {
           return false;
-          //revert();
       }
-    
-      string memory addr_s = toAsciiString(msg.sender);
-      identity memory newID = identity(msg.sender,addr_s,name,email,"potato");
+
+      // get string value of address    
+      string memory addr_s = ascii(msg.sender);
+      identity lookup = ids[addr_s];
       
-      addrs[msg.sender]=newID;
-      names[name]=newID;
-      names[addr_s]=newID;
-      //emails[email]=newID;
+      // does this address already have an identity?
+      if(lookup.addr != address(0x0))
+      {
+          // we already know this ID, just add aliases
+          lookup.aliases.push(name);
+          
+          ids[addr_s]=lookup;
+          addrs[name]=addr_s;
+          
+          return true;
+      }
+
+      identity storage newid; //= identity(msg.sender,addr_s,name,"email","ipfs",aliases,connections);
+      newid.addr = msg.sender;
+      newid.addr_s = addr_s;
+      newid.email="email";
+      newid.ipfs="ipfs";
+      newid.aliases.push(name);
+      
+      ids[addr_s]=newid;
+      addrs[name]=addr_s;
       
       return true;
     }
     
-    function get(string name) public returns (string addr,string email,string ipfs){
-        
-      return (names[name].addr_s,names[name].email,names[name].ipfs);
+    // primary identity lookup function
+    function get(string name) public constant returns (string primary, string addr,string email,string ipfs, uint aliasCount, uint connectionCount){
+      identity memory id = ids[addrs[name]];
+      
+      return (id.name,id.addr_s,id.email,id.ipfs,id.aliases.length, id.connections.length);
     }
     
-    function update(string email) returns(bool){
+    // id'd like to return all of them at once,
+    // but arrays of strings can't be passed around
+    function getAlias(string name,uint offset) public constant returns (string aliase){
+      return ids[addrs[name]].aliases[offset];  
+    }
+    
+    function getConnection(string name,uint offset) public constant returns (string aliase){
+      return ids[addrs[name]].connections[offset];  
+    }
+    
+    function update(string email, string ipfs) public returns(bool){
         
-      identity id=addrs[msg.sender];
-        
+      identity memory id=ids[ascii(msg.sender)];
       id.email=email;
-        
-      addrs[msg.sender]=id;
-      names[id.name]=id;
-      names[id.addr_s]=id;
-      //emails[email]=newID;
-        
+      id.ipfs=ipfs;
+      ids[id.addr_s]=id;
+
+      return true;
+    }
+    
+    function addConnection(string connection) public returns(bool){
+     
+      // is this connection a real user?
+      if(bytes(addrs[connection]).length==0)
+      {
+          return false;
+          //revert();
+      }
+      
+      // add the connection to the user
+      ids[ascii(msg.sender)].connections.push(connection);
+      // I probally need to reinsert don't I?
+      
       return true;
     }
     
     // thanks tkeber
     // https://ethereum.stackexchange.com/questions/8346/convert-address-to-string
-    function toAsciiString(address x) internal returns (string) {
+    function ascii(address x) internal returns (string) {
     bytes memory s = new bytes(40);
     for (uint i = 0; i < 20; i++) {
         byte b = byte(uint8(uint(x) / (2**(8*(19 - i)))));
@@ -79,5 +123,4 @@ contract CryptoMe {
       if (b < 10) return byte(uint8(b) + 0x30);
       else return byte(uint8(b) + 0x57);
     }
-
 }
