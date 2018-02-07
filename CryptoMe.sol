@@ -58,6 +58,7 @@ contract CryptoMe {
       
       ids[addr_s]=newid;
       addrs[name]=addr_s;
+      addrs[addr_s]=addr_s;
       
       return true;
     }
@@ -71,11 +72,11 @@ contract CryptoMe {
     
     // id'd like to return all of them at once,
     // but arrays of strings can't be passed around
-    function getAlias(string name,uint offset) public constant returns (string aliase){
+    function getAlias(string name,uint offset) public constant returns (string alias){
       return ids[addrs[name]].aliases[offset];  
     }
     
-    function getConnection(string name,uint offset) public constant returns (string aliase){
+    function getConnection(string name,uint offset) public constant returns (string connection){
       return ids[addrs[name]].connections[offset];  
     }
     
