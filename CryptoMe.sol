@@ -1,6 +1,9 @@
 pragma solidity ^0.4.20;
 
 // TODO
+// setprimary()
+// check name legitness
+// add payable limiter
 //
 // auction??
 
@@ -17,9 +20,9 @@ contract CryptoMe {
         string[] connections;
     }
 
-    address admin;
     uint256 basePrice;
- 
+    address admin;
+
     mapping(string => string) addrs; // map names to addrs    
     mapping(string => identity) ids; // map addrs to ids
  
@@ -31,15 +34,6 @@ contract CryptoMe {
     basePrice=0;
   }
 
-  function register(string name) payable public returns(string message, uint256 price, uint256 value) {
-  
-      //if(msg.value < basePrice/bytes(name).length)return "need more eth";
-      //
-      if(msg.value < basePrice)return ("need more eth",basePrice,msg.value);
-      
-      return (registerInternal(name),basePrice,msg.value);
-  }
-  
   function setBase(uint price) public returns(string message){
       if(msg.sender!=admin)return "who dis?";
       
@@ -51,8 +45,9 @@ contract CryptoMe {
       return basePrice;
   }
 
-  function registerInternal(string name) private returns(string message) {
+  function register(string name) payable public returns(string message) {
     
+
       // TODO verify legit name here:
       if(bytes(name).length>20)
       {
@@ -63,7 +58,12 @@ contract CryptoMe {
       {
           return "name has bad characters (lower alphanum only)";
       }
-    
+
+      // make sure that the payment
+      // admin gets in for free (for sideloading old names)
+      if( (msg.sender!=admin) && msg.value < (basePrice/bytes(name).length) )return ("need more eth");
+
+
       // make sure we haven't seen this name before
       if(bytes(addrs[name]).length!=0)
       {
@@ -87,20 +87,15 @@ contract CryptoMe {
           return "successfuly added new alias";
       }
 
-      //string[] storage aliases;// = string[](name);
-      //aliases.push(name);
-      
-      //string[] memory connections;
-      
       // create the new identity
-      identity storage newid; // = identity(msg.sender,addr_s,name,"email","ipfs",aliases,connections);
+      identity storage newid = ids[addr_s];
       newid.addr=msg.sender;
       newid.addr_s=addr_s;
       newid.name=name;
       newid.aliases.push(name);
       
       // load identity into registries
-      ids[addr_s]=newid;
+      //ids[addr_s]=newid;
       addrs[name]=addr_s;
       addrs[addr_s]=addr_s;
 
@@ -110,6 +105,8 @@ contract CryptoMe {
 
     function getName(uint offset) public constant returns (string name, uint256 total)
     {
+        if(offset >= names.length)return("not that many names",names.length);
+        
         return (names[offset],names.length);
     }
     
@@ -214,7 +211,12 @@ contract CryptoMe {
     function legitEmail(string s) pure private returns (bool legit){
         bytes memory sbytes=bytes(s);
         if(sbytes.length>40)return false;
-        return true;
+
+        for(uint x=0;x<sbytes.length;++x){
+            if(sbytes[x]==64)return true; // make sure there's an '@' in there
+        }
+        
+        return false;
     }
     
     function legitIPFS(string s) pure private returns (bool legit){
