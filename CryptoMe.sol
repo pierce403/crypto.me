@@ -1,9 +1,6 @@
 pragma solidity ^0.4.20;
 
 // TODO
-// 
-// insert email?
-// look up email
 //
 // auction??
 
@@ -46,9 +43,7 @@ contract CryptoMe {
   }
 
   function register(string name) payable public returns(string message) {
-    
 
-      // TODO verify legit name here:
       if(bytes(name).length>20)
       {
           return "name too long";
@@ -140,7 +135,6 @@ contract CryptoMe {
     
     function update(string email, string ipfs) public returns(string message){
         
-      // TODO: check legitness and uniqueness
       if(!legitEmail(email))return "email is not legit";
       if(!legitIPFS(ipfs))return "IPFS is not legit";
       
