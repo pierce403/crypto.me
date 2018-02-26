@@ -1,9 +1,10 @@
 pragma solidity ^0.4.20;
 
 // TODO
-// setprimary()
-// check name legitness
-// add payable limiter
+// 
+// setadmin()
+// insert email?
+// look up email
 //
 // auction??
 
@@ -11,7 +12,7 @@ contract CryptoMe {
 
     struct identity {
         address addr;
-        string addr_s;
+        //string addr_s;
         string name;
         string email;
         string ipfs;
@@ -23,8 +24,9 @@ contract CryptoMe {
     uint256 basePrice;
     address admin;
 
-    mapping(string => string) addrs; // map names to addrs    
-    mapping(string => identity) ids; // map addrs to ids
+    //mapping(string => address) addrs; // map names to addrs    
+    mapping(string => address) lookup; // map names to addrs    
+    mapping(address => identity) ids; // map addrs to primary id
  
     string[] names;
  
@@ -59,45 +61,44 @@ contract CryptoMe {
           return "name has bad characters (lower alphanum only)";
       }
 
-      // make sure that the payment
+      // make sure that the payment is right
       // admin gets in for free (for sideloading old names)
       if( (msg.sender!=admin) && msg.value < (basePrice/bytes(name).length) )return ("need more eth");
 
 
       // make sure we haven't seen this name before
-      if(bytes(addrs[name]).length!=0)
+      if(lookup[name]!=0)
       {
           return "name already taken";
       }
       
       // get string value of address    
-      string memory addr_s = ascii(msg.sender);
-      identity storage lookup = ids[addr_s];
+      // string memory addr_s = ascii(msg.sender);
+      identity storage oldid = ids[msg.sender];
 
       // does this address already have an identity?
-      if(lookup.addr != address(0x0))
+      if(oldid.addr != address(0x0))
       {
           // we already know this ID, just add aliases
-          lookup.aliases.push(name);
-          
-          ids[addr_s]=lookup;
-          addrs[name]=addr_s;
+          oldid.aliases.push(name);
+
+          lookup[name]=msg.sender;
+          ids[msg.sender]=oldid;
           
           names.push(name);
           return "successfuly added new alias";
       }
 
       // create the new identity
-      identity storage newid = ids[addr_s];
+      identity storage newid = ids[msg.sender];
       newid.addr=msg.sender;
-      newid.addr_s=addr_s;
       newid.name=name;
       newid.aliases.push(name);
       
       // load identity into registries
       //ids[addr_s]=newid;
-      addrs[name]=addr_s;
-      addrs[addr_s]=addr_s;
+      lookup[name]=msg.sender;
+      lookup[ascii(msg.sender)]=msg.sender;
 
       names.push(name);      
       return "successfully added new identity";
@@ -112,9 +113,9 @@ contract CryptoMe {
     
     // primary identity lookup function
     function get(string name) public constant returns (string primary, string addr,string email,string ipfs, uint aliasCount, uint connectionCount){
-      identity memory id = ids[addrs[name]];
+      identity memory id = ids[lookup[name]];
       
-      return (id.name,id.addr_s,id.email,id.ipfs,id.aliases.length, id.connections.length);
+      return (id.name,ascii(id.addr),id.email,id.ipfs,id.aliases.length, id.connections.length);
     }
     
     function getAdmin() public constant returns (address adminaddr){
@@ -124,19 +125,21 @@ contract CryptoMe {
     // id'd like to return all of them at once,
     // but arrays of strings can't be passed around
     function getAlias(string name,uint offset) public constant returns (string alias){
-      return ids[addrs[name]].aliases[offset];  
+      return ids[lookup[name]].aliases[offset];  
     }
     
     function getConnection(string name,uint offset) public constant returns (string connection){
-      return ids[addrs[name]].connections[offset];  
+      return ids[lookup[name]].connections[offset];  
     }
     
     function update(string email, string ipfs) public returns(bool){
         
-      identity memory id=ids[ascii(msg.sender)];
+      // TODO: check legitness and uniqueness
+        
+      identity storage id=ids[msg.sender];
       id.email=email;
       id.ipfs=ipfs;
-      ids[id.addr_s]=id;
+      //ids[id.addr]=id; 
 
       return true;
     }
@@ -144,14 +147,14 @@ contract CryptoMe {
     function setPrimary(string name) public returns (string message){
         
         // look up identity
-        identity memory id = ids[ascii(msg.sender)];
+        identity memory id = ids[msg.sender];
         
         // verify user owns the name
         for(uint x=0;x<id.aliases.length;++x){
           if(keccak256(id.aliases[x])==keccak256(name)){
             id.name=name;
-            ids[id.addr_s]=id;
-            addrs[name]=id.addr_s;
+            ids[id.addr]=id;
+            lookup[name]=id.addr;
             return "name update successful";
           }
         }
@@ -162,14 +165,14 @@ contract CryptoMe {
     function addConnection(string connection) public returns(bool){
      
       // is this connection a real user?
-      if(bytes(addrs[connection]).length==0)
+      if(lookup[connection]==0)
       {
           return false;
           //revert();
       }
       
       // add the connection to the user
-      ids[ascii(msg.sender)].connections.push(connection);
+      ids[msg.sender].connections.push(connection);
       // I probally need to reinsert don't I?
       
       return true;
