@@ -2,7 +2,6 @@ pragma solidity ^0.4.20;
 
 // TODO
 // 
-// setadmin()
 // insert email?
 // look up email
 //
@@ -12,7 +11,6 @@ contract CryptoMe {
 
     struct identity {
         address addr;
-        //string addr_s;
         string name;
         string email;
         string ipfs;
@@ -122,6 +120,14 @@ contract CryptoMe {
         return admin;
     }
     
+    function setAdmin(string name) public returns (bool)
+    {
+        if(msg.sender!=admin)return false;
+        if(lookup[name]==0)return false;
+        admin=lookup[name];
+        return true;
+    }
+    
     // id'd like to return all of them at once,
     // but arrays of strings can't be passed around
     function getAlias(string name,uint offset) public constant returns (string alias){
@@ -132,16 +138,21 @@ contract CryptoMe {
       return ids[lookup[name]].connections[offset];  
     }
     
-    function update(string email, string ipfs) public returns(bool){
+    function update(string email, string ipfs) public returns(string message){
         
       // TODO: check legitness and uniqueness
-        
-      identity storage id=ids[msg.sender];
-      id.email=email;
-      id.ipfs=ipfs;
-      //ids[id.addr]=id; 
+      if(!legitEmail(email))return "email is not legit";
+      if(!legitIPFS(ipfs))return "IPFS is not legit";
+      
+      // check uniqueness
+      if(lookup[email]!=0)return "email already taken";
+      lookup[email]=msg.sender; // add email to aliases
 
-      return true;
+      // set the updated data      
+      ids[msg.sender].email=email;
+      ids[msg.sender].ipfs=ipfs;
+
+      return "update successful";
     }
     
     function setPrimary(string name) public returns (string message){
