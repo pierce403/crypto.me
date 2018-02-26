@@ -169,7 +169,8 @@ if (!web3.eth.defaultAccount) {
 
 //const address = '0xd82429B0126535Ff0B8453EBA606334DE2F79836'; // first attempt, broken
 //const address = '0x9abfc27a2d79af78e0a5479d58cab6377612baba'; // maybe working ropsten
-const address = '0x27546af163172b9c903ef6bfe66e99ca0db12f46'; // maybe working ropsten
+//const address = '0x27546af163172b9c903ef6bfe66e99ca0db12f46'; // maybe working ropsten
+const address = '0xa1ab47989d1Df64c831C915720b108E8Df6751E6'; // M1 v0 ropsten
 
 
 //alert('come on now');
