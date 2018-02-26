@@ -5,7 +5,7 @@ distributed crypto identity
 
 M0 - name registration (testnet only, DoSable)
 
-M1 - registration rate limiting
+M1 - registration rate limiting  <-- we are here
 
 M2 - name transferral
 
