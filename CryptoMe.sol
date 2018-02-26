@@ -2,6 +2,8 @@ pragma solidity ^0.4.20;
 
 // TODO
 //
+// forbid the null users
+//
 // auction??
 
 contract CryptoMe {
@@ -43,6 +45,11 @@ contract CryptoMe {
   }
 
   function register(string name) payable public returns(string message) {
+      
+      if(bytes(name).length<2)
+      {
+          return "name too short";
+      }
 
       if(bytes(name).length>20)
       {
