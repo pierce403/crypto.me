@@ -2,7 +2,6 @@ pragma solidity ^0.4.20;
 
 // TODO
 //
-// forbid the null users
 //
 // auction??
 
@@ -18,7 +17,7 @@ contract CryptoMe {
         string[] connections;
     }
 
-    uint256 basePrice;
+    uint basePrice;
     address admin;
 
     //mapping(string => address) addrs; // map names to addrs    
@@ -26,6 +25,19 @@ contract CryptoMe {
     mapping(address => identity) ids; // map addrs to primary id
  
     string[] names;
+ 
+    struct auction{
+      string  name;
+      address owner;
+      address winner;
+    
+      uint currentBid;
+      uint stop;
+      
+      uint endTime;
+    }
+    
+    auction[] auctions;
  
   function CryptoMe() public
   {
@@ -239,5 +251,46 @@ contract CryptoMe {
         bytes memory sbytes=bytes(s);
         if(sbytes.length!=46)return false;
         return true;
+    }
+    
+    // the auction functions
+    
+    function newAuction(string name, uint stop) public payable returns (string message){
+        
+        // TODO make sure user owns name
+        // TODO make sure the name isn't already contracted
+        
+        auction memory a = auction(name, msg.sender,msg.sender,msg.value,stop,now+60*60*24*7);
+        auctions.push(a);
+        
+        return "yay";
+    }
+    
+    function getAuction(uint x) public constant returns(string name, uint endTime, uint currentBid, uint stop, uint length){
+        auction memory a = auctions[x];
+        return (a.name, a.endTime, a.currentBid, a.stop, auctions.length);
+    }
+    
+    function bid(uint x) public payable returns (string message){
+
+       auctions[x].winner=msg.sender;    
+       auctions[x].currentBid=msg.value;
+
+       return "yay";
+    }
+    
+    function claimAuction(uint x)public returns(string message){
+        if(auctions[x].endTime<now)return "the auction isn't over yet";
+        
+        // TODO remove the alias from the owner
+        
+        // reassign the name in the lookup table
+        lookup[auctions[x].name]=auctions[x].winner;
+        
+        // TODO add the alias to the winner
+        
+        // TODO pay the owner
+        
+        return "yay";
     }
 }
